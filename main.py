@@ -25,17 +25,32 @@ while cap.isOpened():
     result = pose.process(rgb_frame)
 
     if result.pose_landmarks:
-        # Get bounding box around the detected person
+        # Get image dimensions
         h, w, c = frame.shape
-        x_min, y_min, x_max, y_max = w, h, 0, 0
-        
-        for landmark in result.pose_landmarks.landmark:
-            x, y = int(landmark.x * w), int(landmark.y * h)
-            x_min, y_min = min(x, x_min), min(y, y_min)
-            x_max, y_max = max(x, x_max), max(y, y_max)
 
-        # Draw green boundary box
-        cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 3)
+        # Get nose coordinates (landmark 0 is the nose)
+        nose = result.pose_landmarks.landmark[0]
+        nose_x, nose_y = int(nose.x * w), int(nose.y * h)
+
+        # Adjust the y-coordinate to place the dot just above the nose
+        dot_y = int(nose_y - 10)  # Adjust 40 pixels above the nose
+
+        # Draw a red dot just above the nose position
+        cv2.circle(frame, (nose_x, dot_y), 7, (0, 0, 255), -1)
+
+        # Draw a green rectangle around the dot (bullseye area)
+        rect_width, rect_height = 110, 150  # Width and height of the rectangle
+        top_left = (nose_x - rect_width // 2, dot_y - rect_height // 2)
+        bottom_right = (nose_x + rect_width // 2, dot_y + rect_height // 2)
+        cv2.rectangle(frame, top_left, bottom_right, (0, 255, 0), 2)  # Green rectangle
+
+        # Display coordinates near the bullseye (the red dot above the nose)
+        cv2.putText(frame, f"Head: ({nose_x}, {dot_y})", 
+                    (nose_x - 50, dot_y - 10),  # Positioning near the bullseye
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+        # Print coordinates (for debugging or motor control)
+        print(f"Head Position: X = {nose_x}, Y = {dot_y}")
 
     # Show the frame
     cv2.imshow("Human Detection", frame)
