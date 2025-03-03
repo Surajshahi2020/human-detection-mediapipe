@@ -1,0 +1,93 @@
+1)Import necessary libraries
+import cv2
+import mediapipe as mp
+cv2: OpenCV library for handling image processing, video capture, and display.
+mediapipe as mp: Imports the MediaPipe library, which is useful for real-time pose estimation, face detection, and hand tracking.
+
+2)Initialize MediaPipe Pose (for human detection)
+mp_pose = mp.solutions.pose
+mp_drawing = mp.solutions.drawing_utils
+pose = mp_pose.Pose()
+mp.solutions.pose: Imports MediaPipe’s Pose module, which is used for detecting human body keypoints (like shoulders, elbows, knees, etc.).
+mp_drawing: This is used to draw the landmarks (keypoints) on the detected human body.
+pose = mp_pose.Pose(): Creates an instance of the Pose detection model.
+
+3)Open Camera
+cap = cv2.VideoCapture(0)  # 0 for default webcam
+cv2.VideoCapture(0): Opens the default camera (webcam).
+If you want to use an external camera, replace 0 with 1, 2, etc.
+
+4)Create a resizable window
+cv2.namedWindow("Human Detection", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("Human Detection", 1280, 720)  # Set to desired size
+cv2.namedWindow("Human Detection", cv2.WINDOW_NORMAL): Creates a window named "Human Detection" and allows it to be resized.
+cv2.resizeWindow("Human Detection", 1280, 720): Sets the window size to 1280x720 pixels.
+
+5)Start a loop to read and process frames
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+cap.isOpened(): Checks if the webcam is successfully opened.
+ret, frame = cap.read():
+ret: Boolean (True/False) indicating whether the frame was captured successfully.
+frame: The captured image (frame) from the webcam.
+if not ret: break: If the frame is not captured (e.g., webcam is disconnected), exit the loop.
+
+6)Convert the frame from BGR to RGB
+rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+OpenCV loads images in BGR format, but MediaPipe requires RGB.
+cv2.cvtColor(frame, cv2.COLOR_BGR2RGB): Converts the frame from BGR to RGB.
+
+7)Process the frame with Pose detection
+result = pose.process(rgb_frame)
+pose.process(rgb_frame):
+Runs the pose detection model on the current frame.
+Stores the results (landmarks/keypoints) in result.
+
+8)Check if a person is detected
+if result.pose_landmarks:
+If pose_landmarks exists, it means a human pose was detected in the frame.
+
+9)Get bounding box around the detected person
+h, w, c = frame.shape
+x_min, y_min, x_max, y_max = w, h, 0, 0
+h, w, c = frame.shape: Gets the height (h), width (w), and channels (c) of the image.
+x_min, y_min, x_max, y_max: Initializes the bounding box coordinates:
+x_min, y_min: Set to max possible values.
+x_max, y_max: Set to min possible values.
+
+10)Loop through the detected landmarks to find the bounding box
+for landmark in result.pose_landmarks.landmark:
+    x, y = int(landmark.x * w), int(landmark.y * h)
+    x_min, y_min = min(x, x_min), min(y, y_min)
+    x_max, y_max = max(x, x_max), max(y, y_max)
+result.pose_landmarks.landmark: Contains 33 keypoints (like shoulders, knees, ankles, etc.).
+x, y = int(landmark.x * w), int(landmark.y * h): Converts normalized coordinates (0 to 1) into pixel values.
+x_min, y_min: Updates the smallest x and y coordinates.
+x_max, y_max: Updates the largest x and y coordinates.
+This loop effectively determines the bounding box around the detected person.
+
+11)Draw a bounding box around the detected person
+cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 3)
+cv2.rectangle(): Draws a rectangle on the frame.
+(x_min, y_min): Top-left corner.
+(x_max, y_max): Bottom-right corner.
+(0, 255, 0): Green color (BGR format).
+3: Thickness of the rectangle.
+
+12)isplay the frame
+cv2.imshow("Human Detection", frame)
+cv2.imshow(): Displays the processed frame in the "Human Detection" window.
+
+13)Press 'q' to exit the loop
+if cv2.waitKey(1) & 0xFF == ord('q'):
+    break
+cv2.waitKey(1): Waits 1 millisecond for a key press.
+& 0xFF == ord('q'): If the 'q' key is pressed, exit the loop.
+
+14)Release resources and close the window
+cap.release()
+cv2.destroyAllWindows()
+cap.release(): Releases the webcam.
+cv2.destroyAllWindows(): Closes all OpenCV windows.
