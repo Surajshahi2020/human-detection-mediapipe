@@ -46,7 +46,7 @@ while cap.isOpened():
 
         # Display coordinates near the bullseye (the red dot above the nose)
         cv2.putText(frame, f"Head: ({nose_x}, {dot_y})", 
-                    (nose_x - 50, dot_y - 10),  # Positioning near the bullseye
+                    (nose_x - 50, dot_y - 85),  # Positioning near the bullseye
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
         # Print coordinates (for debugging or motor control)
